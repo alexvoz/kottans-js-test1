@@ -19,12 +19,17 @@
         },100);
     };
 
+    function getScale(contWidth, contHeight, rectWidth, rectHeight){
+        return Math.min(rectWidth / contWidth, rectHeight / contHeight);
+    }
+
     function resizeCanvas() {
         stage.setWidth(window.innerWidth);
         stage.setHeight(window.innerHeight);
         if (preloader) preloader.setPosition({x: stage.getWidth() / 2 - preloader.getWidth() / 2, y: stage.getHeight() / 2 - preloader.getHeight() / 2});
         if (contGroup.getClientRect().width > (stage.getWidth() - cardsOffset) || contGroup.getClientRect().height > (stage.getHeight() - cardsOffset) || contGroup.scaleX() < 1 || contGroup.scaleY() < 1) {
-            var scale = Math.min((stage.getWidth() - cardsOffset) / (contGroup.getClientRect().width / contGroup.scaleX()), (stage.getHeight() - cardsOffset) / (contGroup.getClientRect().height / contGroup.scaleY()));
+            var scale = getScale(contGroup.getClientRect().width / contGroup.scaleX(), contGroup.getClientRect().height / contGroup.scaleY(), stage.getWidth() - cardsOffset, stage.getHeight() - cardsOffset);
+            //Math.min((stage.getWidth() - cardsOffset) / (contGroup.getClientRect().width / contGroup.scaleX()), (stage.getHeight() - cardsOffset) / (contGroup.getClientRect().height / contGroup.scaleY()));
             contGroup.scale({x: scale, y:scale});
         }
         contGroup.setPosition({x: stage.getWidth() / 2 - contGroup.getClientRect().width / 2});
@@ -138,7 +143,7 @@
                 currOffset += count;
                 showData(jsonObj);
             } else {
-                console.log(http.readyState, http.status);
+                //console.log(http.readyState, http.status);
             }
         };
         http.onerror = function(){
@@ -236,23 +241,34 @@
             x: 12,
             y: 12
         });
+        card.add(rectPhoto);
         var photo = new Image();
         photo.src = 'https://pokeapi.co/media/img/' + pokemon.pkdx_id + '.png';
         photo.onload = function(){
             var img = new Konva.Image({
                 image: photo,
                 width: photo.width,
-                height: photo.height,
-                x: rectPhoto.getWidth()/2 - photo.width/2 + rectPhoto.getPosition().x,
-                y: rectPhoto.getHeight()/2 - photo.height/2 + + rectPhoto.getPosition().y
+                height: photo.height//,
+                //x: rectPhoto.getWidth()/2 - photo.width/2 + rectPhoto.getPosition().x,
+                //y: rectPhoto.getHeight()/2 - photo.height/2 + + rectPhoto.getPosition().y
             });
             img.on('mouseover', overHandler);
             img.on('mouseout', outHandler);
             img.on('tap click', createBigCard);
+            var padding = 5;
+            var scale = 1;
+            if (img.getWidth() > rectPhoto.getWidth() || img.getHeight() > rectPhoto.getHeight()) {
+                scale = getScale(img.getWidth(), img.getHeight(), rectPhoto.getWidth() - padding * 2, rectPhoto.getHeight() - padding * 2);
+                img.scale({x:scale, y:scale});
+            }
+            img.setPosition({
+                x:rectPhoto.getWidth()/2 - img.getWidth()/2 * scale + rectPhoto.getPosition().x,
+                y:rectPhoto.getHeight()/2 - img.getHeight()/2 * scale + + rectPhoto.getPosition().y
+            });
             card.add(img);
             stage.draw();
         };
-        card.add(rectPhoto);
+
         var nameText = new Konva.Text({
             x: 12,
             y: 150,
@@ -355,8 +371,18 @@
                 image: photo,
                 width: photo.width * 2,
                 height: photo.height * 2,
-                x: rectPhoto.getWidth()/2 - photo.width + rectPhoto.getPosition().x,
-                y: rectPhoto.getHeight()/2 - photo.height + rectPhoto.getPosition().y
+                //x: rectPhoto.getWidth()/2 - photo.width + rectPhoto.getPosition().x,
+                //y: rectPhoto.getHeight()/2 - photo.height + rectPhoto.getPosition().y
+            });
+            var padding = 6;
+            var scale = 1;
+            if (img.getWidth() > rectPhoto.getWidth() || img.getHeight() > rectPhoto.getHeight()) {
+                scale = getScale(img.getWidth(), img.getHeight(), rectPhoto.getWidth() - padding * 2, rectPhoto.getHeight() - padding * 2);
+                img.scale({x:scale, y:scale});
+            }
+            img.setPosition({
+                x:rectPhoto.getWidth()/2 - img.getWidth()/2 * scale + rectPhoto.getPosition().x,
+                y:rectPhoto.getHeight()/2 - img.getHeight()/2 * scale + + rectPhoto.getPosition().y
             });
             cardBig.add(rect).add(rectPhoto).add(img);
             cards.add(cardBig);
@@ -373,25 +399,66 @@
             fontStyle: 'bold'
         });
         cardBig.add(nameText);
-        var paramText = new Konva.Text({
-            fontFamily: 'Consolas',
+        //Konva don't have table tools
+        var param1st = new Konva.Text({
+            fontFamily: 'Arial',
             fontSize: 16,
-            lineHeight: 1.8,
+            lineHeight: 1.75,
             x: 15,
             y: 290,
-            //Костыль. Переделать!!!
-            text: 'Type:              ' + jsonObj.objects[card.ID].types[0].name.charAt(0).toUpperCase() + jsonObj.objects[card.ID].types[0].name.slice(1) + '\n' +
-                  'Attack:            ' + jsonObj.objects[card.ID].attack + '\n' +
-                  'Defense:           ' + jsonObj.objects[card.ID].defense + '\n' +
-                  'HP:                ' + jsonObj.objects[card.ID].hp + '\n' +
-                  'SP Attack:         ' + jsonObj.objects[card.ID].sp_atk + '\n' +
-                  'SP Defense:        ' + jsonObj.objects[card.ID].sp_def + '\n' +
-                  'Speed:             ' + jsonObj.objects[card.ID].speed + '\n' +
-                  'Weight:            ' + jsonObj.objects[card.ID].weight + '\n' +
-                  'Total movies:      ' + jsonObj.objects[card.ID].moves.length
+            text: 'Type(s):' + '\n' +
+                  'Attack:' + '\n' +
+                  'Defense:' + '\n' +
+                  'HP:' + '\n' +
+                  'SP Attack:' + '\n' +
+                  'SP Defense:' + '\n' +
+                  'Speed:' + '\n' +
+                  'Weight:' + '\n' +
+                  'Total movies:'
         });
+        var types = '';
+        for (var i = 0; i < jsonObj.objects[card.ID].types.length; i++){
+            if (i == 0) types += jsonObj.objects[card.ID].types[i].name.charAt(0).toUpperCase() + jsonObj.objects[card.ID].types[i].name.slice(1);
+            else types += ', ' + jsonObj.objects[card.ID].types[i].name;
+        }
+        var param2nd = new Konva.Text({
+            fontFamily: 'Arial',
+            fontSize: 16,
+            lineHeight: 1.75,
+            x: 140,
+            y: 290,
+            //text: jsonObj.objects[card.ID].types[0].name.charAt(0).toUpperCase() + jsonObj.objects[card.ID].types[0].name.slice(1) + '\n' +
+            text: types + '\n' +
+                  jsonObj.objects[card.ID].attack + '\n' +
+                  jsonObj.objects[card.ID].defense + '\n' +
+                  jsonObj.objects[card.ID].hp + '\n' +
+                  jsonObj.objects[card.ID].sp_atk + '\n' +
+                  jsonObj.objects[card.ID].sp_def + '\n' +
+                  jsonObj.objects[card.ID].speed + '\n' +
+                  jsonObj.objects[card.ID].weight + '\n' +
+                  jsonObj.objects[card.ID].moves.length
+        });
+        for (var n = 0; n < 3; n++){
+            var baseX = 10, baseY = 283;
+            var p1 = {x: baseX + 125 * n, y:baseY};
+            var line = new Konva.Line({
+                points: [p1.x, p1.y, p1.x, p1.y + 253],
+                stroke: 'black',
+                strokeWidth: 2
+            });
+            cardBig.add(line);
+        }
+        for (var m = 0; m < 10; m++){
+            var p2 = {x: baseX, y:baseY + 28 * m};
+            var line2 = new Konva.Line({
+                points: [p2.x, p2.y, p2.x + 250, p2.y],
+                stroke: 'black',
+                strokeWidth: 2
+            });
+            cardBig.add(line2);
+        }
         cardBig.setPosition({x: (cardWidth + cardsOffset) * 4, y: ((cardHeight + cardsOffset) * 3) / 2 - cardBigHeight / 2});
-        cardBig.add(paramText);
+        cardBig.add(param1st).add(param2nd);
         stage.draw();
     }
 
