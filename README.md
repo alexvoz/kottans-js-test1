@@ -7,3 +7,5 @@
 by Александр Письменчук (alexvoz)
 
 alexvoz@mail.ru
+
+Проект реализован на Canvas с помощью фрейворка http://konvajs.github.io/

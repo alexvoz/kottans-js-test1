@@ -26,10 +26,8 @@
     function resizeCanvas() {
         stage.setWidth(window.innerWidth);
         stage.setHeight(window.innerHeight);
-        if (preloader) preloader.setPosition({x: stage.getWidth() / 2 - preloader.getWidth() / 2, y: stage.getHeight() / 2 - preloader.getHeight() / 2});
         if (contGroup.getClientRect().width > (stage.getWidth() - cardsOffset) || contGroup.getClientRect().height > (stage.getHeight() - cardsOffset) || contGroup.scaleX() < 1 || contGroup.scaleY() < 1) {
             var scale = getScale(contGroup.getClientRect().width / contGroup.scaleX(), contGroup.getClientRect().height / contGroup.scaleY(), stage.getWidth() - cardsOffset, stage.getHeight() - cardsOffset);
-            //Math.min((stage.getWidth() - cardsOffset) / (contGroup.getClientRect().width / contGroup.scaleX()), (stage.getHeight() - cardsOffset) / (contGroup.getClientRect().height / contGroup.scaleY()));
             contGroup.scale({x: scale, y:scale});
         }
         contGroup.setPosition({x: stage.getWidth() / 2 - contGroup.getClientRect().width / 2});
@@ -66,7 +64,7 @@
         ]
     };
 
-    function createPreloader() {
+    function startApp() {
         var imgPreloader = new Image();
         imgPreloader.src = 'images/preloader.png';
         imgPreloader.onload = function () {
@@ -79,18 +77,14 @@
                 width: imgPreloader.width / 12,
                 height: imgPreloader.height
             });
-            layer.add(preloader);
+            preloader.setPosition({x: contGroup.getClientRect().width / 2 - preloader.getWidth() / 2, y: contGroup.getClientRect().height / 2 - preloader.getHeight() / 2});
+            contGroup.add(preloader);
             preloader.start();
             resizeCanvas();
             reqData(12, currOffset);
         };
     }
 
-
-    initCont();
-    createHead();
-    createBtn();
-    createPreloader();
 
     //HEAD
 
@@ -139,8 +133,9 @@
         http.onreadystatechange = function() { //Call a function when the state changes.
             if(http.readyState == 4 && http.status == 200) {
                 jsonObj = JSON.parse(http.responseText);
-                //console.log(jsonObj);
+                console.log(jsonObj);
                 currOffset += count;
+                if (currOffset > jsonObj.meta.total_count) currOffset = 0;
                 showData(jsonObj);
             } else {
                 //console.log(http.readyState, http.status);
@@ -249,8 +244,6 @@
                 image: photo,
                 width: photo.width,
                 height: photo.height//,
-                //x: rectPhoto.getWidth()/2 - photo.width/2 + rectPhoto.getPosition().x,
-                //y: rectPhoto.getHeight()/2 - photo.height/2 + + rectPhoto.getPosition().y
             });
             img.on('mouseover', overHandler);
             img.on('mouseout', outHandler);
@@ -371,8 +364,6 @@
                 image: photo,
                 width: photo.width * 2,
                 height: photo.height * 2,
-                //x: rectPhoto.getWidth()/2 - photo.width + rectPhoto.getPosition().x,
-                //y: rectPhoto.getHeight()/2 - photo.height + rectPhoto.getPosition().y
             });
             var padding = 6;
             var scale = 1;
@@ -399,6 +390,7 @@
             fontStyle: 'bold'
         });
         cardBig.add(nameText);
+
         //Konva don't have table tools
         var param1st = new Konva.Text({
             fontFamily: 'Arial',
@@ -465,5 +457,10 @@
     var layer = new Konva.Layer({});
     layer.add(contGroup);
     stage.add(layer);
+
+    initCont();
+    createHead();
+    createBtn();
+    startApp();
 
 })();
