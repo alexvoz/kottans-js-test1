@@ -1,5 +1,5 @@
 /**
- * Created by Alexander Pismenchuk on 18.03.2016.
+ * Created by Alexander Pismenchuk on 01.04.2016.
  */
 
 
@@ -130,7 +130,7 @@
         //var url = "test.json";
         http.open("GET", url, true);
 
-        http.onreadystatechange = function() { //Call a function when the state changes.
+        http.onreadystatechange = function() { 
             if(http.readyState == 4 && http.status == 200) {
                 jsonObj = JSON.parse(http.responseText);
                 console.log(jsonObj);
@@ -419,7 +419,6 @@
             lineHeight: 1.75,
             x: 140,
             y: 290,
-            //text: jsonObj.objects[card.ID].types[0].name.charAt(0).toUpperCase() + jsonObj.objects[card.ID].types[0].name.slice(1) + '\n' +
             text: types + '\n' +
                   jsonObj.objects[card.ID].attack + '\n' +
                   jsonObj.objects[card.ID].defense + '\n' +
